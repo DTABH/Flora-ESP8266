@@ -76,12 +76,12 @@ void updateColonColor(RgbColor color) {
 
   if (json["colon"].as<int>() == 3) {
 #if defined(CLOCK_VERSION_IV12) || defined(CLOCK_VERSION_IV6_V2)
-    colorMed = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), 0.1);
-    colorMedLow = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), 0.3);
-    colorLow = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), 0.6);
+    colorMed = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), (float)0.1);
+    colorMedLow = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), (float)0.3);
+    colorLow = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), (float)0.6);
 #else
-    colorMed = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), 0.2);
-    colorLow = RgbColor::LinearBlend(color, RgbColor(0, 0, 0), 0.4);
+    colorMed = RgbColor::LinearBlend(color, RgbColor(0, 0, 0),(float) 0.2);
+    colorLow = RgbColor::LinearBlend(color, RgbColor(0, 0, 0),(float)0.4);
 #endif
   }
 

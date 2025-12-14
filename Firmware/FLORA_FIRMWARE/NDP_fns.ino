@@ -5,43 +5,87 @@ byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
 time_t getNtpTime()
 {
-  IPAddress ntpServerIP; // NTP server's ip address
+  IPAddress ntpServerIP ; // NTP server's ip address
+  unsigned long unixtime;
+
+  if (RTC_Exists && RTC_Only)
+  { 
+    RTC_now = rtc.now();
+    unixtime = RTC_now.unixtime();
+    Serial.println("Use RTC time only! : " + String(unixtime));
+    return unixtime;
+  }
 
   while (Udp.parsePacket() > 0) ; // discard any previously received packets
   //Serial.println("Transmit NTP Request");
   // get a random server from the pool
   const char* server = json["ntp"].as<const char*>();
-  if (server == NULL || server[0] == '\0') {
+  
+  if (server == NULL || server[0] == '\0') 
+  {
     server = ntpServerName;
   }
+
   Serial.print("[NTP] Connecting to server: ");
   Serial.println(server);
-  if (WiFi.hostByName(server, ntpServerIP) != 1) {
+  if (WiFi.hostByName(server, ntpServerIP) != 1) 
+  {
     Serial.println("[NTP] Server not found...");
-    return 0;
+    if (RTC_Exists)
+    {
+      RTC_now = rtc.now();
+      unixtime = RTC_now.unixtime();
+      Serial.println("Use RTC time instead of NTP : " + String(unixtime));
+      return unixtime;
+    }
+    else
+    {
+      return 0; // return 0 if unable to get the time
+    }
   }
+
   Serial.print("[NTP] Server IP: ");
   Serial.println(ntpServerIP);
   sendNTPpacket(ntpServerIP);
   uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500) {
+  while (millis() - beginWait < 1500) 
+  {
     int size = Udp.parsePacket();
-    if (size >= NTP_PACKET_SIZE) {
+    if (size >= NTP_PACKET_SIZE) 
+    {
       Serial.println("[NTP] Receiving data...");
       Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+
       unsigned long secsSince1900;
       // convert four bytes starting at location 40 to a long integer
       secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
+      unixtime = secsSince1900 - 2208988800UL; // unixzeit
 
-      return secsSince1900 - 2208988800UL;
+      if (RTC_Exists && !RTC_Only)
+      {
+        Serial.println("Set RTC time " + String(unixtime));
+        rtc.adjust(DateTime(unixtime));  // Set RTC time using NTP epoch time
+      }
+
+      return unixtime;
     }
   }
 
-  Serial.println("[NTP] Server not responding...");
-  return 0; // return 0 if unable to get the time
+  Serial.println("[NTP] Server not responding... ");
+  if (RTC_Exists)
+  {
+    RTC_now = rtc.now();
+    unixtime = RTC_now.unixtime();
+    Serial.println("Use RTC time instead of NTP : " + String(unixtime));
+    return unixtime;
+  }
+  else
+  {
+    return 0; // return 0 if unable to get the time
+  }
 }
 
 time_t getNtpLocalTime() {
@@ -56,11 +100,11 @@ time_t getNtpLocalTime() {
   if (receivedTime == 0) {
     timeUpdateStatus = UPDATE_FAIL;
     failedAttempts += 1;
-    Serial.print("[NTP] Sync failed. Attempt: ");
+    Serial.print("[NTP/RTC] Sync failed. Attempt: ");
     Serial.println(failedAttempts);
     return 0;
   }
-  Serial.print("[NTP] Sync success! Received NTP timestamp: ");
+  Serial.print("[NTP/RTC] Sync success! Received NTP or NTC timestamp: ");
   Serial.println(receivedTime);
   timeUpdateFirst = false;
   timeUpdateStatus = UPDATE_SUCCESS;

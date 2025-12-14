@@ -169,6 +169,7 @@ bool startMDNS() {
 }
 
 void startConfigPortal() {
+  Serial.print("Start startConfigPortal ");
   configStartMillis = millis(); // start counter
 
   updateColonColor(purple[bri]);
@@ -241,7 +242,7 @@ void startConfigPortal() {
   }
 }
 
-bool startServer() {
+void startServer() {
   httpUpdateServer.setup(&server, update_path, update_username, update_password);
   server.on("/", handleRoot);
   server.on("/generate_204", handleRoot);  //Android captive portal. Maybe not needed. Might be handled by notFound handler.

@@ -1,22 +1,21 @@
-
-void ICACHE_RAM_ATTR shiftSetValue(uint8_t pin, bool value) {
+void IRAM_ATTR shiftSetValue(uint8_t pin, bool value) {
   //(value) ? bitSet(bytes[pinsToRegisterMap[pin]], pinsToBitsMap[pin]) : bitClear(bytes[pinsToRegisterMap[pin]], pinsToBitsMap[pin]);
   (value) ? bitSet(bytes[pin / 8], pin % 8) : bitClear(bytes[pin / 8], pin % 8);
 }
 
 
 /*
-  void ICACHE_RAM_ATTR shiftSetAll(bool value) {
+  void IRAM_ATTR shiftSetAll(bool value) {
   for (int i = 0; i < registersCount * 8; i++) {
     //(value) ? bitSet(bytes[pinsToRegisterMap[i]], pinsToBitsMap[i]) : bitClear(bytes[pinsToRegisterMap[i]], pinsToBitsMap[i]);
     (value) ? bitSet(bytes[i / 8], i % 8) : bitClear(bytes[i / 8], i % 8);
   }
   }
 */
-void ICACHE_RAM_ATTR shiftWriteBytes(volatile byte *data) {
+void IRAM_ATTR shiftWriteBytes(volatile byte *data) {
 
   for (int i; i < registersCount; i++) {
-    SPI.transfer(data[registersCount - 1 - i]);
+     SPI.transfer(data[registersCount - 1 - i]);
   }
 
   // set gpio through register manipulation, fast!
@@ -24,7 +23,7 @@ void ICACHE_RAM_ATTR shiftWriteBytes(volatile byte *data) {
   GPOC = 1 << LATCH;
 }
 
-void ICACHE_RAM_ATTR TimerHandler()
+void IRAM_ATTR  TimerHandler()
 {
 
   // Only one ISR timer is available so if we want the dots to not glitch during wifi connection, we need to put it here...
@@ -76,31 +75,45 @@ void ICACHE_RAM_ATTR TimerHandler()
 }
 
 void initScreen() {
+  Serial.println("Start initScreen ");
   pinMode(DATA, INPUT);
   pinMode(CLOCK, OUTPUT);
   pinMode(LATCH, OUTPUT);
   digitalWrite(LATCH, LOW);
+  Serial.println("Start initScreen ");
 
   bri = json["bri"].as<int>();
   setupBriBalance();
-  crossFadeTime = json["fade"].as<int>();
-  setupPhaseShift();
-  setupCrossFade();
+  Serial.println("OK setupBriBalance ");
 
+  crossFadeTime = json["fade"].as<int>();
+   Serial.println("OK crossFadeTime " + String(crossFadeTime));
+   ///
+  setupPhaseShift();
+  Serial.println("OK setupPhaseShift ");
+
+  setupCrossFade();
+  Serial.println("OK setupCrossFade ");
+
+  Serial.println("Start  SPI.begin ");
   SPI.begin();
   SPI.setDataMode(SPI_MODE0);
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV16);
+  Serial.println("OK SPI.. ");
 
   ITimer.attachInterruptInterval(TIMER_INTERVAL_uS, TimerHandler);
   // 30ms slow 240ms, 20 => medium 160ms, 15 => quick 120ms
+  Serial.println("OK ITimer.attachInterruptInterval ");
 
   blankAllDigits();
+  Serial.println("OK blankAllDigits ");
 }
 
 void enableScreen() {
   ITimer.attachInterruptInterval(TIMER_INTERVAL_uS, TimerHandler);
 }
+
 void disableScreen() {
   ITimer.detachInterrupt();
 }
@@ -186,13 +199,16 @@ void draw(uint8_t digit, uint8_t value[segmentCount]) {
 void showTime() {
 
   int hours = hour();
-  if (hours > 12 && json["t_format"].as<int>() == 0) { // 12 / 24 h format
+  if (hours > 12 && json["t_format"].as<int>() == 0) 
+  { // 12 / 24 h format
     hours -= 12;
-  } else if (hours == 0 && json["t_format"].as<int>() == 0) {
+  } 
+  else if 
+  (hours == 0 && json["t_format"].as<int>() == 0) {
     hours = 12;
   }
 
-  int splitTime[6] = {
+  int splitTime[6] =   {
     (hours / 10) % 10,
     hours % 10,
     (minute() / 10) % 10,
@@ -201,8 +217,10 @@ void showTime() {
     second() % 10,
   };
 
-  for (int i = 0; i < registersCount ; i++) {
-    if (i == 0 && splitTime[0] == 0 && json["zero"].as<int>() == 0) {
+  for (int i = 0; i < registersCount ; i++) 
+  {
+    if (i == 0 && splitTime[0] == 0 && json["zero"].as<int>() == 0) 
+    {
       blankDigit(i);
       continue;
     }
@@ -210,6 +228,52 @@ void showTime() {
   }
 
 }
+
+void showDate() {
+
+  int splitDate[6] = 
+  {
+    (day() / 10) % 10,
+    day() % 10,
+    (month() / 10) % 10,
+    month() % 10,
+    0 ,0
+  };
+
+  for (int i = 0; i < registersCount ; i++) 
+  {
+    if (i == 0 && splitDate[0] == 0 && json["zero"].as<int>() == 0) 
+    {
+      blankDigit(i);
+      continue;
+    }
+    setDigit(i, splitDate[i]);
+  }
+}
+
+void showYear() {
+
+  int yearx = year();
+  int splitYear[6] = 
+  {  
+    (yearx / 1000) % 10,
+    (yearx % 1000)/100,
+    (yearx % 100) / 10,
+    yearx % 10,
+    0,0
+  };
+
+  for (int i = 0; i < registersCount ; i++) 
+  {
+    if (i == 0 && splitYear[0] == 0 && json["zero"].as<int>() == 0) 
+    {
+      blankDigit(i);
+      continue;
+    }
+    setDigit(i, splitYear[i]);
+  }
+}
+
 
 void cycleDigits() {
   updateColonColor(azure[bri]);

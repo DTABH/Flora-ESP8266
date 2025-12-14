@@ -2,6 +2,8 @@
  * GNU General Public License v3.0
  * Copyright (c) 2021 Martin Cerny
 */
+// ACHTUNG ESP8266 Boardmanager Version 2.7.4 verwenden !! Neuere gehen nicht!
+// Generic ESP8285 Modul ESP8285 verwenden Tools:Flashsize 1 MB FS:64K OTA 470K verwenden
 
 #include <FS.h>
 #include <ArduinoJson.h>
@@ -9,7 +11,6 @@
 
 #include "ESP8266TimerInterrupt.h"
 #include "SPI.h"
-
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
@@ -27,12 +28,15 @@
 
 #include <TimeLib.h>
 #include <Timezone.h>
+#include "RTClib.h"
+
+
 
 // Pick a clock version below!
 //#define CLOCK_VERSION_IV6
-#define CLOCK_VERSION_IV6_V2
+//#define CLOCK_VERSION_IV6_V2
 //#define CLOCK_VERSION_IV12
-//#define CLOCK_VERSION_IV22
+#define CLOCK_VERSION_IV22
 
 #if !defined(CLOCK_VERSION_IV6) && !defined(CLOCK_VERSION_IV6_V2) && !defined(CLOCK_VERSION_IV12) && !defined(CLOCK_VERSION_IV22)
 #error "You have to select a clock version! Line 25"
@@ -55,6 +59,13 @@
 #define CLOCK 14
 #define LATCH 15
 #define TIMER_INTERVAL_uS 200 // 200 = safe value for 6 digits. You can go down to 150 for 4-digit one. Going too low will cause crashes.
+
+#define I2C_SDA   4
+#define I2C_SCL   5
+#define BUTTON_1  16 
+#define BUTTON_2  A0  // GPIO 17
+#define BUTTON_3  12 
+
 
 // User global vars
 const char* dns_name = "flora"; // only for AP mode
@@ -248,103 +259,191 @@ WiFiUDP Udp;
 ESP8266HTTPUpdateServer httpUpdateServer;
 unsigned int localPort = 8888;  // local port to listen for UDP packets
 
+  const char* ssid ;
+  const char* pass;
+  const char* ip;
+  const char* gw ;
+  const char* sn ;
+
+bool RTC_Only;
+bool RTC_Exists;
+DateTime RTC_now;
+RTC_DS3231 rtc;
 
 // the setup function runs once when you press reset or power the board
-void setup() {
+void setup() 
+{
   // initialize digital pin LED_BUILTIN as an output.
   Serial.begin(115200);
   Serial.println("");
+  WiFi.mode(WIFI_STA);
+  Serial.println("Start Setup");
+  
+  // Begin I2C communication
+  // per default GPIO 4,5 so  Wire.begin(); would be enough for better reading used:
+  Wire.begin(I2C_SDA,I2C_SCL); 
+  if ( rtc.begin()) 
+  {
+    RTC_Exists = true; // RTC wxists and works
+    RTC_now = rtc.now();
+    Serial.println(" RTC found unixtime since 1/1/1970: " + String(RTC_now.unixtime() )); 
+  }
+  else
+  {
+    Serial.println("Couldn't find RTC"); 
+  }
 
-  if (!SPIFFS.begin()) {
+  if (!SPIFFS.begin()) 
+  {
     Serial.println("[CONF] Failed to mount file system");
   }
+  else
+  {
+    Serial.println("OK file system mounted ");
+  }
+
   readConfig();
 
   initStrip();
+  Serial.println("OK initStrip ");
+
   initRgbColon();
+  Serial.println("OK initRgbColon ");
+
   initScreen();
+  Serial.println("OK initScreen ");
 
   WiFi.macAddress(mac);
 
-  const char* ssid = json["ssid"].as<const char*>();
-  const char* pass = json["pass"].as<const char*>();
-  const char* ip = json["ip"].as<const char*>();
-  const char* gw = json["gw"].as<const char*>();
-  const char* sn = json["sn"].as<const char*>();
+  if (RTC_Exists)
+  {
+    int rtconly;
+    rtconly = json["rtconly"].as<unsigned int>();
+    RTC_Only = rtconly;
+    Serial.println("OK RTC_Only " + String(rtconly));
+  }
 
-  if (ssid != NULL && pass != NULL && ssid[0] != '\0' && pass[0] != '\0') {
-    Serial.println("[WIFI] Connecting to: " + String(ssid));
-    WiFi.mode(WIFI_STA);
+  ssid = json["ssid"].as<const char*>();
+  pass = json["pass"].as<const char*>();
+  ip = json["ip"].as<const char*>();
+  gw = json["gw"].as<const char*>();
+  sn = json["sn"].as<const char*>();
 
-    if (ip != NULL && gw != NULL && sn != NULL && ip[0] != '\0' && gw[0] != '\0' && sn[0] != '\0') {
-      IPAddress ip_address, gateway_ip, subnet_mask;
-      if (!ip_address.fromString(ip) || !gateway_ip.fromString(gw) || !subnet_mask.fromString(sn)) {
-        Serial.println("[WIFI] Error setting up static IP, using auto IP instead. Check your configuration.");
-      } else {
-        WiFi.config(ip_address, gateway_ip, subnet_mask);
+  if (RTC_Only)
+  {
+    ndp_setup();
+    Serial.print("OK ndp_setup and/or RTC");
+  }
+  else
+  {
+      
+    if (ssid != NULL && pass != NULL && ssid[0] != '\0' && pass[0] != '\0') 
+    {
+      Serial.println("[WIFI] Set WiFi.mode(WIFI_STA)");
+      WiFi.mode(WIFI_STA);
+      Serial.println("OK WiFi.mode(WIFI_STA);");
+
+      if (ip != NULL && gw != NULL && sn != NULL && ip[0] != '\0' && gw[0] != '\0' && sn[0] != '\0') 
+      {
+        IPAddress ip_address, gateway_ip, subnet_mask;
+        if (!ip_address.fromString(ip) || !gateway_ip.fromString(gw) || !subnet_mask.fromString(sn)) 
+        {
+          Serial.println("[WIFI] Error setting up static IP, using auto IP instead. Check your configuration.");
+        } 
+        else 
+        {
+          WiFi.config(ip_address, gateway_ip, subnet_mask);
+        }
       }
-    }
-    // serializeJson(json, Serial);
+      // serializeJson(json, Serial);
+      enableDotsAnimation = true; // Start the dots animation
 
-    enableDotsAnimation = true; // Start the dots animation
+    
+      updateColonColor(yellow[bri]);
+      Serial.println("OK updateColonColor");
 
-    updateColonColor(yellow[bri]);
-    strip_show();
+      strip_show();
+      Serial.println("OK strip_show");
 
-    WiFi.hostname(AP_NAME + macLastThreeSegments(mac));
-    WiFi.begin(ssid, pass);
+      Serial.println("Setting Hostname and begin wifi");
+      WiFi.hostname(AP_NAME + macLastThreeSegments(mac));
 
-    //startBlinking(200, colorWifiConnecting);
+      Serial.println("[WIFI] Connecting to: " + String(ssid));
+      WiFi.begin(ssid, pass);
 
-    for (int i = 0; i < 1000; i++) {
-      if (WiFi.status() != WL_CONNECTED) {
-        if (i > 200) { // 20s timeout
+      //startBlinking(200, colorWifiConnecting);
+
+      for (int i = 0; i < 1000; i++) 
+      {
+        if (WiFi.status() != WL_CONNECTED) 
+        {
+          if (i > 200) 
+          { // 20s timeout
+            enableDotsAnimation = false;
+            deviceMode = CONFIG_MODE;
+            updateColonColor(red[bri]);
+            strip_show();
+            Serial.print("[WIFI] Failed to connect to: " + String(ssid) + ", going into config mode.");
+            delay(500);
+            break;
+          }
+
+          delay(100);
+        } 
+        else 
+        {
+          updateColonColor(green[bri]);
           enableDotsAnimation = false;
-          deviceMode = CONFIG_MODE;
-          updateColonColor(red[bri]);
           strip_show();
-          Serial.print("[WIFI] Failed to connect to: " + String(ssid) + ", going into config mode.");
-          delay(500);
+          Serial.print("[WIFI] Successfully connected to: ");
+          Serial.println(WiFi.SSID());
+          Serial.print("[WIFI] Mac address: ");
+          Serial.println(WiFi.macAddress());
+          Serial.print("[WIFI] IP address: ");
+          Serial.println(WiFi.localIP());
+          delay(1000);
           break;
         }
-        delay(100);
-      } else {
-        updateColonColor(green[bri]);
-        enableDotsAnimation = false;
-        strip_show();
-        Serial.print("[WIFI] Successfully connected to: ");
-        Serial.println(WiFi.SSID());
-        Serial.print("[WIFI] Mac address: ");
-        Serial.println(WiFi.macAddress());
-        Serial.print("[WIFI] IP address: ");
-        Serial.println(WiFi.localIP());
-        delay(1000);
-        break;
       }
+    } 
+    else 
+    {
+      deviceMode = CONFIG_MODE;
+      Serial.println("[CONF] No credentials set, going to config mode.");
     }
-  } else {
-    deviceMode = CONFIG_MODE;
-    Serial.println("[CONF] No credentials set, going to config mode.");
+
+    if (deviceMode == CONFIG_MODE || deviceMode == CONNECTION_FAIL) 
+    {
+      startConfigPortal(); // Blocking loop
+    } 
+    else 
+    { 
+      
+      startServer();
+      Serial.print("OK startServer");
+
+      ndp_setup();
+      Serial.print("OK ndp_setup and/or RTC");
+    }
   }
 
-  if (deviceMode == CONFIG_MODE || deviceMode == CONNECTION_FAIL) {
-    startConfigPortal(); // Blocking loop
-  } else {
-    ndp_setup();
-    startServer();
-  }
+  initScreen();
 
-  //initScreen();
-
-  if (json["rst_cycle"].as<unsigned int>() == 1) {
+  if (json["rst_cycle"].as<unsigned int>() == 1) 
+  {
     cycleDigits();
     delay(500);
   }
 
-  if (json["rst_ip"].as<unsigned int>() == 1) {
+  if (json["rst_ip"].as<unsigned int>() == 1) 
+  {
     showIP(5000);
     delay(500);
   }
+
+  pinMode(BUTTON_1, INPUT);
+  pinMode(BUTTON_2, INPUT);
+  pinMode(BUTTON_3, INPUT);
 
   /*
     if (!MDNS.begin(dns_name)) {
@@ -354,39 +453,54 @@ void setup() {
       MDNS.addService("http", "tcp", 80);
     }
   */
-}
+
+} // End of Setup 
 
 // the loop function runs over and over again forever
-void loop() {
+void loop() 
+{
 
-  if (timeUpdateFirst == true && timeUpdateStatus == UPDATE_FAIL || deviceMode == CONNECTION_FAIL) {
+  //Serial.println("Begin of loop " + String(millis()));
+  if (timeUpdateFirst == true && timeUpdateStatus == UPDATE_FAIL || deviceMode == CONNECTION_FAIL) 
+  {
     setAllDigitsTo(0);
     updateColonColor(red[bri]); // red
     strip_show();
+    server.handleClient();
     delay(10);
     return;
   }
 
-  if (millis() - prevDisplayMillis >= 1000) { //update the display only if time has changed
+  if (millis() - prevDisplayMillis >= 1000) 
+  { //update the display only if time has changed
     prevDisplayMillis = millis();
     toggleNightMode();
 
-    if (timeUpdateStatus) {
-      if (timeUpdateStatus == UPDATE_SUCCESS) {
+    if (timeUpdateStatus) 
+    {
+      if (timeUpdateStatus == UPDATE_SUCCESS) 
+      {
         setTemporaryColonColor(5, green[bri]);
       }
-      if (timeUpdateStatus == UPDATE_FAIL) {
-        if (failedAttempts > 2) {
+
+      if (timeUpdateStatus == UPDATE_FAIL) 
+      {
+        if (failedAttempts > 2) 
+        {
           colonColor = red[bri];
-        } else {
+        } 
+        else 
+        {
           setTemporaryColonColor(5, red[bri]);
         }
       }
+
       timeUpdateStatus = 0;
     }
 
     handleColon();
     showTime();
+    Serial.println("Time Update millis: " + String(prevDisplayMillis) + "  now: " + String(now()));
   }
 
   animations.UpdateAnimations();
@@ -394,6 +508,31 @@ void loop() {
 
   //MDNS.update();
   server.handleClient();
-  delay(1); // Keeps the ESP cold!
+  delay(10); // Keeps the ESP cold!
 
-}
+  // Button handling
+  int timeButtonpressed = 0;
+  int buttonpressed1 = 0;
+  int buttonpressed2 = 0;
+  int buttonpressed3 = 0;
+  // When a button is pressed more than 2 seconds go to menue
+  while ((digitalRead(BUTTON_1)  || analogRead(BUTTON_2)> 100 || digitalRead(BUTTON_3)) && timeButtonpressed <= 20)
+  {
+    timeButtonpressed += 1;
+    if(digitalRead(BUTTON_1)){buttonpressed1=1;}
+    if(analogRead(BUTTON_2)>100){buttonpressed2=2;}
+    if(digitalRead(BUTTON_3)){buttonpressed3=4;}   
+    delay(100); // 100ms count to 20 for 2 seco
+  }
+
+  if (timeButtonpressed >=10 )
+  {
+    while ((digitalRead(BUTTON_1)  || analogRead(BUTTON_2)> 100 || digitalRead(BUTTON_3)))
+    {}
+    menue(buttonpressed1 + buttonpressed2 + buttonpressed3);    
+  } 
+
+  timeButtonpressed = 0;
+
+  // Serial.print("End of loop " + String( millis()));
+} // end of loop

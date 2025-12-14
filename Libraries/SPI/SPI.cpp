@@ -299,13 +299,13 @@ void SPIClass::setClockDivider(uint32_t clockDiv) {
     SPI1CLK = clockDiv;
 }
 
-void ICACHE_RAM_ATTR SPIClass::setDataBits(uint16_t bits) {
+void IRAM_ATTR SPIClass::setDataBits(uint16_t bits) {
     const uint32_t mask = ~((SPIMMOSI << SPILMOSI) | (SPIMMISO << SPILMISO));
     bits--;
     SPI1U1 = ((SPI1U1 & mask) | ((bits << SPILMOSI) | (bits << SPILMISO)));
 }
 
-uint8_t ICACHE_RAM_ATTR SPIClass::transfer(uint8_t data) {
+uint8_t IRAM_ATTR SPIClass::transfer(uint8_t data) {
     while(SPI1CMD & SPIBUSY) {}
     // reset to 8Bit mode
     setDataBits(8);
@@ -315,7 +315,7 @@ uint8_t ICACHE_RAM_ATTR SPIClass::transfer(uint8_t data) {
     return (uint8_t) (SPI1W0 & 0xff);
 }
 
-uint8_t ICACHE_RAM_ATTR SPIClass::transferFast(uint8_t data) {
+uint8_t IRAM_ATTR SPIClass::transferFast(uint8_t data) {
     //while(SPI1CMD & SPIBUSY) {}
     // reset to 8Bit mode
     setDataBits(8);

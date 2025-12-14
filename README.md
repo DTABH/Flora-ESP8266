@@ -1,18 +1,16 @@
-Changes:
-Implemented  a cheap china RTC Modul and 2 Buttons (see Pictures) using 5 free GPIO of the ESP
-GPIO 4 and 5 are per default already SDA and SCL for fthe clock
+# Changes:
 
-GPIO 12 16 and AD1 are used for 3 Buttons
-With the buttons a menu was implemented to set the RTC-Clock without WLAN/NTP connection
-If a NTP connection exists the time from NTP will be used (RTC is synchonized)
-If NTP fails RTC ist used. This mixed mode will only work if a WLAN connection exists
-If no WLAN exists a RTC-Only mode must/can be activated pressing Button 1+2 together
-The minute, hour,year,month and day must be set manually pressing button 1 first and then 2 for + and 3 for -
-Pressing button1 again steps further until day at least.
-Other configuration with buttons like Colon on/off etc. are not yet implmenented
-
-
-
+Implemented  a cheap china RTC Modul and 3 Buttons (see Pictures) using 5 free GPIO of the ESP. <br>
+GPIO 4 and 5 are by default already SDA and SCL for the clock. <br>
+GPIO 12 16 and AD1 are used for 3 Buttons. <br>
+With the buttons a menu was implemented to set the RTC-Clock without WLAN/NTP connection. <br>
+If a NTP connection exists, the time from NTP will be used (RTC is synchonized). <br>
+If NTP fails RTC ist used. This mixed mode will only work if a WLAN connection exists. <br>
+If no WLAN exists a RTC-Only mode must/can be activated pressing Button 1+2 together. <br>
+The minute, hour,year,month and day must be set manually pressing button 1 first <br>
+and then 2 for "+" and 3 for "-". for changing the values <br>
+Pressing button1 again steps further until day at least. (if NTP has once worked before RTC is already set). <br>
+Other configuration with buttons like brightness, colon on/off etc. are not yet implmenented. <br>
 
 # --------------- original Readme  ---------------
 # Flora-ESP8266

@@ -21,7 +21,7 @@ After flashing the browser cache everythings ok.
 **FW_VERSION "6.0.0 dtabh"**
 
 <ul>
-  <li>Implemented  a cheap china RTC Modul and 3 Buttons (see Pictures) using 2 free GPIO of the ESP. 
+  <li>Implemented  a cheap china RTC Modul (see Pictures) using 2 free GPIO of the ESP. 
     GPIO 4 and 5 are by default already SDA and SCL for the clock. <br>
     If a NTP connection exists, the time from NTP will be used (RTC is synchonized). <br>
     If NTP fails RTC ist used. This mixed mode will only work if a WLAN connection exists. <br>

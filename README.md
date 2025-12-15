@@ -1,16 +1,62 @@
 # Changes:
 
-Implemented  a cheap china RTC Modul and 3 Buttons (see Pictures) using 5 free GPIO of the ESP. <br>
-GPIO 4 and 5 are by default already SDA and SCL for the clock. <br>
-GPIO 12 16 and AD1 are used for 3 Buttons. <br>
-With the buttons a menu was implemented to set the RTC-Clock without WLAN/NTP connection. <br>
-If a NTP connection exists, the time from NTP will be used (RTC is synchonized). <br>
-If NTP fails RTC ist used. This mixed mode will only work if a WLAN connection exists. <br>
-If no WLAN exists a RTC-Only mode must/can be activated pressing Button 1+2 together. <br>
-The minute, hour,year,month and day must be set manually pressing button 1 first <br>
-and then 2 for "+" and 3 for "-". for changing the values <br>
-Pressing button1 again steps further until day at least. (if NTP has once worked before RTC is already set). <br>
-Other configuration with buttons like brightness, colon on/off etc. are not yet implmenented. <br>
+**FW_VERSION "6.0.1 dtabh"**
+
+<ul>
+  <li>Lowest Brightness is now 2 and steps also 2. ( Clock in the night should be very very dark)
+  </li>
+  <li>Configuration of medium brightness possible with configuration on webpage.
+  </li>
+   <li>Showing day and month every 30 or 60 seconds with configuration on webpage.
+  </li>
+   <li>Extended menu for Nightmode  with begin hour 19,20,21,22  with configuration on webpage.
+  </li>
+   <li>Toggle with button3 to switch on/off Nightmode with automatic reset of toggle to normal at 6'clock.
+  </li>
+   <li>Possible bug : opening Webpage after reprogramming leads to restart of the clock, until FireFox browser cache is flashed
+After flashing the browser cache everythings ok.
+  </li>
+</ul>
+
+**FW_VERSION "6.0.0 dtabh"**
+
+<ul>
+  <li>Implemented  a cheap china RTC Modul and 3 Buttons (see Pictures) using 2 free GPIO of the ESP. 
+    GPIO 4 and 5 are by default already SDA and SCL for the clock. <br>
+    If a NTP connection exists, the time from NTP will be used (RTC is synchonized). <br>
+    If NTP fails RTC ist used. This mixed mode will only work if a WLAN connection exists. <br>
+    If no WLAN exists a RTC-Only mode must/can be activated pressing Button 1+2 together. <br>
+  </li>
+  <li>Implemented 3 Buttons (see Pictures) using 3 other GPIO 12 16 and AD1. 
+  </li>
+  <li>
+    For the buttons a menu was implemented to set the RTC-Clock without WLAN/NTP connection. <br>
+    The minute, hour,year,month and day must be set manually pressing button 1 first <br>
+    and then 2 for "+" and 3 for "-". for changing the values <br>
+    Pressing button1 again steps further until day at least. (if NTP has once worked before RTC is already set). <br> 
+  </li>
+</ul>
+<br>
+<br>
+<br>
+<br>
+
+**Images:**
+
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/DS3231_RTC-Clock.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1231.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1232.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1233.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1234.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1235.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1236.jpg)  
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
 # --------------- original Readme  ---------------
 # Flora-ESP8266

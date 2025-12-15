@@ -2,8 +2,13 @@
  * GNU General Public License v3.0
  * Copyright (c) 2021 Martin Cerny
 */
-// ACHTUNG ESP8266 Boardmanager Version 2.7.4 verwenden !! Neuere gehen nicht!
-// Generic ESP8285 Modul ESP8285 verwenden Tools:Flashsize 1 MB FS:64K OTA 470K verwenden
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+//  Use ESP8266 Boardmanager Version 2.7.4 other might fail
+// Use Generic ESP8285 Modul ESP8285 with  Tools:Flashsize 1 MB FS:64K OTA 470K  other might fail
+// Use the Lib-files of SPI within this projetc an copy to the folder of arduino libraries
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
+
 
 #include <FS.h>
 #include <ArduinoJson.h>
@@ -44,7 +49,7 @@
 
 #define AP_NAME "FLORA_"
 #define FW_NAME "FLORA"
-#define FW_VERSION "5.1.3"
+#define FW_VERSION "6.0.1 dtabh"
 #define CONFIG_TIMEOUT 300000 // 300000 = 5 minutes
 
 // ONLY CHANGE DEFINES BELOW IF YOU KNOW WHAT YOU'RE DOING!
@@ -207,15 +212,15 @@ volatile uint8_t targetBrightness[registersCount][8];
 // 48 steps => 100hz
 volatile uint8_t shiftedDutyState[registersCount];
 const uint8_t pwmResolution = 48; // should be in the multiples of dimmingSteps to enable smooth crossfade
-const uint8_t dimmingSteps = 8;
+const uint8_t dimmingSteps = 1;
 
 // MAX BRIGHTNESS PER DIGIT
 // These need to be multiples of 8 to enable crossfade! Must be less or equal as pwmResolution.
 // Set maximum brightness for reach digit separately. This can be used to normalize brightness between new and burned out tubes.
 // Last two values are ignored in 4-digit clock
 uint8_t bri_vals_separate[3][6] = {
-  {8, 8, 8, 8, 8, 8}, // Low brightness
-  {24, 24, 24, 24, 24, 24}, // Medium brightness
+  {1, 1, 1, 1, 1, 1}, // Low brightness
+  {16, 16, 16, 16, 16, 16}, // Medium brightness
   {48, 48, 48, 48, 48, 48}, // High brightness
 };
 
@@ -234,10 +239,12 @@ volatile uint8_t digitsCache[] = {0, 0, 0, 0};
 volatile byte bytes[registersCount];
 volatile byte prevBytes[registersCount];
 volatile uint8_t bri = 0;
+volatile uint8_t colon = 0;
 volatile uint8_t crossFadeTime = 0;
 uint8_t timeUpdateStatus = 0; // 0 = no update, 1 = update success, 2 = update fail,
 uint8_t failedAttempts = 0;
 volatile bool enableDotsAnimation;
+volatile bool enableShowDateDots;
 volatile unsigned short dotsAnimationState;
 RgbColor colonColor;
 IPAddress ip_addr;
@@ -259,16 +266,19 @@ WiFiUDP Udp;
 ESP8266HTTPUpdateServer httpUpdateServer;
 unsigned int localPort = 8888;  // local port to listen for UDP packets
 
-  const char* ssid ;
-  const char* pass;
-  const char* ip;
-  const char* gw ;
-  const char* sn ;
+const char* ssid ;
+const char* pass;
+const char* ip;
+const char* gw ;
+const char* sn ;
 
 bool RTC_Only;
 bool RTC_Exists;
 DateTime RTC_now;
 RTC_DS3231 rtc;
+int showdate;
+int nmode;
+int togglenmode;
 
 // the setup function runs once when you press reset or power the board
 void setup() 
@@ -441,6 +451,12 @@ void setup()
     delay(500);
   }
 
+  showdate = json["showdate"].as<unsigned int>() ;
+  Serial.print("OK showdate" + String(showdate));
+
+  nmode = json["nmode"].as<int>();
+  Serial.print("OK nmode" + String(nmode));
+
   pinMode(BUTTON_1, INPUT);
   pinMode(BUTTON_2, INPUT);
   pinMode(BUTTON_3, INPUT);
@@ -454,6 +470,7 @@ void setup()
     }
   */
 
+  Serial.print("OK End of Setup " );
 } // End of Setup 
 
 // the loop function runs over and over again forever
@@ -497,9 +514,30 @@ void loop()
 
       timeUpdateStatus = 0;
     }
-
-    handleColon();
-    showTime();
+     
+    // Every 30 or 60 second show day and month within the minute (after 15 or/and 45 seconds) 
+    if (showdate > 0 && ((now() + 15 ) % (30*showdate)) == 0)
+    {
+      // Disable and clear colon
+      int Oldcolon = colon;
+      colon = 0;
+      handleColon();
+      // Enable the 2 dots after day and month 
+      enableShowDateDots = true;
+      showDate();
+      delay(2000); // shown for 2 seconds  
+      // Disable dots
+      enableShowDateDots = false;
+      // Enable colon
+      colon = Oldcolon;
+    }
+    else
+    {
+      // Show time and colon when configured
+      handleColon();
+      showTime();
+    }
+    
     Serial.println("Time Update millis: " + String(prevDisplayMillis) + "  now: " + String(now()));
   }
 

@@ -4,10 +4,8 @@
 // 1 -> Setting minute,hour,year,month,day
 // 1,2 together  Set RTC_Only true -> no WLAN no webpage no ntp
 // 1,3 together  Set RTC_Only false-> access via WLAN  webpage and if configured ntp
-// the following settings are not implemented only proposals
-// 2 -> Setting  Brightness,Colon on/off,Color 1..32 different settings .... same as on webpage
-// 3 -> Setting
-
+// 2 -> Show Date
+// 3 -> toggle for nightmode
 void menue(int buttonpressed)
 {
 
@@ -15,6 +13,9 @@ void menue(int buttonpressed)
   int endreached  = 0;
   setTemporaryColonColor(1, red[2]);
 
+  bool OldRTC_Only = RTC_Only;
+
+  // Button 1 and 2 pressed together RTC_Only set to true
   if (buttonpressed == 3)
   { 
     if (RTC_Exists)
@@ -33,6 +34,7 @@ void menue(int buttonpressed)
     }
   }
 
+  // Button 1 and 3 pressed together RTC_Only set to false
   if (buttonpressed == 5)
   { 
     RTC_Only  = false;
@@ -44,20 +46,50 @@ void menue(int buttonpressed)
     ESP.restart();
   }
 
+  // button_3 pressed two times is toggle for temporary nightmode 
+  // toogle force nightmode until next day
+  if (buttonpressed == 4)
+  {     
+    Serial.println("menue item : toogle force nightmode until next day" );
+    setSyncInterval(0.1);
+    // Loop over button pressings
+    endreached = 0;    
+    while (endreached < 30)
+    {  
+      if (digitalRead(BUTTON_3) )
+      {
+        if (togglenmode)
+        {
+          togglenmode = 0;
+          }
+        else
+        {
+          togglenmode = 1;
+        }
+        
+        break; // toggle leave at once
+      } 
+      delay(200);
+      endreached +=1;         
+    }
+    setSyncInterval(3600); 
+  }            
+
+
+
+  // don't try contact NTP Server
+  RTC_Only = true;
+
   // minutes , hours , day, month, year
   if (buttonpressed == 1)
   {
-    bool OldRTC_Only = RTC_Only;
-
+    
     // 1= minutes , 2=hours , 3=year, 4=month, 5=day
     for (int i = 1; i < 6; i ++) 
     {      
 
       Serial.println("menue item : " + String(i));
-
-      // don't try contact NTP Server
-      RTC_Only = true;
-      // Synch every 100 ms so changes can be shown at once
+       // Synch every 100 ms so changes can be shown at once
       setSyncInterval(0.1);
       delay(200);
       // Show the right menu
@@ -120,12 +152,84 @@ void menue(int buttonpressed)
       {
         break;
       }     
-    }
-
-    RTC_Only = OldRTC_Only;
-    setSyncInterval(3600); 
-
+    }    
   }
+
+   // show date , 
+  if (buttonpressed == 2)
+  {    
+    // 1= show date, 2 =  night mode
+    for (int i = 1; i < 2; i ++) 
+    {      
+
+      Serial.println("menue item : " + String(i));
+       // Synch every 100 ms so changes can be shown at once
+      setSyncInterval(0.1);
+      delay(200);
+      // Show the right menu
+      if(i == 1)
+      {
+        // 5 = "S"  0 = "D" for "S"how"D"ate
+        showDigits(5,0,-1, showdate);
+      }      
+      setSyncInterval(3600);
+
+      // Loop over button pressings
+      endreached = 0;
+      while (endreached < 30)
+      { 
+        if (analogRead(BUTTON_2) > 100)
+        {
+          if(i == 1)
+          {
+            if (showdate < 2)
+            {
+              showdate++;
+            }
+          }
+          endreached =0;
+        }
+
+        if (digitalRead(BUTTON_3) )
+        {
+          if(i == 1)
+          {
+            if (showdate > 0)
+              {
+                showdate--;
+              }
+          }
+          endreached =0;
+        } 
+
+        if (digitalRead(BUTTON_1) )
+        { 
+          delay(500);
+          break;
+        } 
+
+        setSyncInterval(0.1);
+        delay(200);
+        endreached +=1;    
+        // show changes in the right menu
+        if(i == 1)
+        {
+          showDigits(5,0,-1, showdate);
+        }      
+
+        setSyncInterval(3600);
+      }
+
+      if (endreached > 28)
+      {
+        break;
+      }     
+    }    
+  }
+
+  RTC_Only = OldRTC_Only;
+  setSyncInterval(3600); 
+
 }
 
 // changes the date and time with simple addition substraction of seconds from unixtime

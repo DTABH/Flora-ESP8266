@@ -50,6 +50,18 @@ void IRAM_ATTR  TimerHandler()
     if (dotsAnimationState >= dotsAnimationSteps) dotsAnimationState = 0;
   }
 
+	if (enableShowDateDots)
+	{
+		#if defined(CLOCK_VERSION_IV12)
+		segmentBrightness[1][4] = bri_vals_separate[bri][0];
+		segmentBrightness[3][4] = bri_vals_separate[bri][2];
+		#else
+		segmentBrightness[1][7] = bri_vals_separate[bri][0];
+	  segmentBrightness[3][7] = bri_vals_separate[bri][2];
+		#endif
+	}
+	
+	
   // Normal PWM
   for (int i = 0; i < registersCount; i++) {
     for (int ii = 0; ii < segmentCount; ii++) {
@@ -83,6 +95,7 @@ void initScreen() {
   Serial.println("Start initScreen ");
 
   bri = json["bri"].as<int>();
+	colon = json["colon"].as<int>();
   setupBriBalance();
   Serial.println("OK setupBriBalance ");
 
@@ -122,7 +135,7 @@ void setupBriBalance() {
   if (json["bal_enable"].as<int>() == 0) return;
   for (int i = 0; i < registersCount; i++) {
     bri_vals_separate[0][i] = json["bal"]["low"][i].as<int>(); // low bri balance
-    bri_vals_separate[1][i] = json["bal"]["high"][i].as<int>(); // medium brightness is ignored and set to high
+    bri_vals_separate[1][i] = json["bal"]["medium"][i].as<int>(); // medium brightness is ignored and set to high
     bri_vals_separate[2][i] = json["bal"]["high"][i].as<int>(); // high bri balance
   }
 }
@@ -274,6 +287,24 @@ void showYear() {
   }
 }
 
+// shows one digit at the passed position 1,2,3,4 
+void showDigit(int pos, int digit) {
+  if(pos <= registersCount){
+    blankDigit(pos-1);
+    if(digit >= 0 && digit <= 9)
+    {
+      setDigit(pos-1, digit);
+    }
+  }
+}
+
+// shows 4 digit at position 1, 2, 3, 4
+void showDigits(int digit1, int digit2 , int digit3, int digit4) {
+  showDigit(1, digit1);
+  showDigit(2, digit2);
+  showDigit(3, digit3);
+  showDigit(4, digit4);
+}
 
 void cycleDigits() {
   updateColonColor(azure[bri]);
@@ -341,10 +372,26 @@ void setupPhaseShift() {
 }
 
 void toggleNightMode() {
-  if (json["nmode"].as<int>() == 0) return;
-  if (hour() >= 22 || hour() <= 6) {
+  // if togglenmode then activate NightMode
+  // but at 6 o'clock deactivate the toggle
+  int nmode = json["nmode"].as<int>();
+  if (togglenmode > 0)
+  { 
     bri = 0;
+    colon = 0;
+    if( hour() == 6 && minute() == 0 )
+    {
+      togglenmode = 0;
+    }
+    return;
+  }
+
+  if (nmode == 0) return;
+  if (hour() >= nmode + 18 || hour() <= 6) {
+    bri = 0;
+    colon = 0;
   } else {
     bri = json["bri"].as<int>();
+    colon = json["colon"].as<int>();
   }
 }

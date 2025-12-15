@@ -408,6 +408,9 @@ void handleRoot() {
       initRgbColon();
     } else if(server.hasArg("is_form")){
       json["rgb"]["en"] = 0;
+    }    
+    if (server.hasArg("showdate")) {
+      json["showdate"] = server.arg("showdate");
     }
     if (server.hasArg("nmode")) {
       json["nmode"] = server.arg("nmode");
@@ -430,7 +433,10 @@ void handleRoot() {
       if (server.hasArg("bal_h_" + String(i))) {
         json["bal"]["high"][i] = server.arg("bal_h_" + String(i));
       }
-      if (server.hasArg("bal_l_" + String(i))) {
+      if (server.hasArg("bal_m_" + String(i))) {
+        json["bal"]["medium"][i] = server.arg("bal_m_" + String(i));
+      }
+     if (server.hasArg("bal_l_" + String(i))) {
         json["bal"]["low"][i] = server.arg("bal_l_" + String(i));
       }
     }
@@ -626,6 +632,24 @@ void handleRoot() {
     }
     html += "</div>"; // FLEX ROW END
 
+    html += "<h3>Values for medium brightness setting:</h3>";
+    html += "<div class=\"flexrow\">"; // FLEX ROW START
+    for (int i = 0; i < registersCount; i++) {
+      html += "<div class=\"col\">"; // COLUMN START
+      html += "<div class=\"row\"><label for=\"bal_m_" + String(i) + "\">Digit " + String(i + 1) + ":</label>";
+      html += "<select id=\"bal_m_" + String(i) + "\" name=\"bal_m_" + String(i) + "\">";
+
+      for (int ii = pwmResolution; ii > 0; ii -= dimmingSteps) {
+        html += "<option value=\"" + String(ii) + "\"";
+        if ((!json["bal"]["medium"][i].isNull() && json["bal"]["medium"][i].as<int>() == ii) || (json["bal"]["medium"][i].isNull() && ii == dimmingSteps)) html += " selected";
+        html += ">" + String(ii) + "</option>";
+      }
+
+      html += "</select></div>";
+      html += "</div>"; // COLUMN END
+    }
+    html += "</div>"; // FLEX ROW END
+
     html += "<h3>Values for low brightness setting:</h3>";
     html += "<div class=\"flexrow\">"; // FLEX ROW START
     for (int i = 0; i < registersCount; i++) {
@@ -645,6 +669,20 @@ void handleRoot() {
     html += "</div>"; // FLEX ROW END
 
     html += "</div>"; // Toggle wrapper end
+
+    unsigned int showdate = json["showdate"].as<unsigned int>();
+    html += "<div class=\"row\"><label for=\"showdate\">Show Date:</label>";
+    html += "<select id=\"showdate\" name=\"showdate\">"; 
+    html += "<option value=\"0\"";
+    if (showdate == 0) html += " selected";
+    html += ">None</option>";
+    html += "<option value=\"1\"";
+    if (showdate == 1) html += " selected";
+    html += ">Show date every 30 seconds</option>";
+    html += "<option value=\"2\"";
+    if (showdate == 2) html += " selected";
+    html += ">Show date every 60 seconds</option>";    
+    html += "</select></div>";
 
 
     html += "<div class=\"row\"><label for=\"fade\">Crossfade animation:</label>";
@@ -666,17 +704,28 @@ void handleRoot() {
     html += "<div class=\"row\"><label for=\"nmode\">Night mode:</label>";
     html += "<select id=\"nmode\" name=\"nmode\">";
     unsigned int nmode = json["nmode"].as<unsigned int>();
+
     html += "<option value=\"0\"";
     if (nmode == 0) html += " selected";
     html += ">None</option>";
+
     html += "<option value=\"1\"";
     if (nmode == 1) html += " selected";
-    html += ">Set low brightness between 22:00-06:00</option>";
-    //html += "<option value=\"2\"";
-    //if (nmode == 2) html += " selected";
-    //html += ">Clock OFF between 22:00-06:00</option>";
-    html += "</select></div>";
+    html += ">Set low brightness between 19:00-06:00</option>";
 
+		html += "<option value=\"2\"";
+    if (nmode == 2) html += " selected";
+    html += ">Set low brightness between 20:00-06:00</option>";
+
+		html += "<option value=\"3\"";
+    if (nmode == 3) html += " selected";
+    html += ">Set low brightness between 21:00-06:00</option>";
+
+		html += "<option value=\"4\"";
+    if (nmode == 4) html += " selected";
+    html += ">Set low brightness between 22:00-06:00</option>";	
+
+    html += "</select></div>";
 
     html += "<div class=\"row\"><label for=\"colon\">Colon:</label>";
     html += "<select id=\"colon\" name=\"colon\">";

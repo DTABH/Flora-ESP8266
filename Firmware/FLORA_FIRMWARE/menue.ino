@@ -11,7 +11,15 @@ void menue(int buttonpressed)
 
   Serial.println("menue " + String(buttonpressed));
   int endreached  = 0;
-  setTemporaryColonColor(1, red[2]);
+
+  // set coloc red during menu input
+  RgbColor oldcolonColor = colonColor;
+  int oldcolon = colon;
+  colon = 1;
+  colonColor =   red[bri];
+  updateColonColor( red[bri]);
+  strip_show();
+
 
   bool OldRTC_Only = RTC_Only;
 
@@ -49,9 +57,8 @@ void menue(int buttonpressed)
   // button_3 pressed two times is toggle for temporary nightmode 
   // toogle force nightmode until next day
   if (buttonpressed == 4)
-  {     
-    Serial.println("menue item : toogle force nightmode until next day" );
-    setSyncInterval(0.1);
+  {        
+   
     // Loop over button pressings
     endreached = 0;    
     while (endreached < 30)
@@ -66,13 +73,14 @@ void menue(int buttonpressed)
         {
           togglenmode = 1;
         }
-        
+
         break; // toggle leave at once
       } 
       delay(200);
       endreached +=1;         
     }
-    setSyncInterval(3600); 
+    showTime(); // refresh Digits
+    Serial.println("menue item : toogle force nightmode  togglenmode : " + String(togglenmode) );
   }            
 
 
@@ -226,6 +234,9 @@ void menue(int buttonpressed)
       }     
     }    
   }
+
+  colon = oldcolon;
+  colonColor = oldcolonColor;
 
   RTC_Only = OldRTC_Only;
   setSyncInterval(3600); 

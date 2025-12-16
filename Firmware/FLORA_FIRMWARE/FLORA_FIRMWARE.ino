@@ -49,7 +49,7 @@
 
 #define AP_NAME "FLORA_"
 #define FW_NAME "FLORA"
-#define FW_VERSION "6.0.1 dtabh"
+#define FW_VERSION "6.0.2 dtabh"
 #define CONFIG_TIMEOUT 300000 // 300000 = 5 minutes
 
 // ONLY CHANGE DEFINES BELOW IF YOU KNOW WHAT YOU'RE DOING!
@@ -528,7 +528,7 @@ void loop()
       delay(2000); // shown for 2 seconds  
       // Disable dots
       enableShowDateDots = false;
-      // Enable colon
+      // Set Enable colon configured value
       colon = Oldcolon;
     }
     else

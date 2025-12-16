@@ -374,7 +374,7 @@ void setupPhaseShift() {
 void toggleNightMode() {
   // if togglenmode then activate NightMode
   // but at 6 o'clock deactivate the toggle
-  int nmode = json["nmode"].as<int>();
+  int nmode = json["nmode"].as<int>(); 
   if (togglenmode > 0)
   { 
     bri = 0;
@@ -386,8 +386,7 @@ void toggleNightMode() {
     return;
   }
 
-  if (nmode == 0) return;
-  if (hour() >= nmode + 18 || hour() <= 6) {
+  if (nmode > 0 && (hour() >= nmode + 18 || hour() <= 6)) {
     bri = 0;
     colon = 0;
   } else {

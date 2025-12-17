@@ -1,4 +1,24 @@
 # Changes:
+**FW_VERSION "6.0.3 dtabh"**
+
+<ul>
+  <li> Brightness low is always 1 point lower to get 1 for lowest brightness
+  </li>
+  <li>Nightmode changed in start hour of night mode and ending hour new implemented     
+    Actual start hours are 19,20,21,22 end hours 5,6,7,8,9 .
+      Only works correct in 24 h mode
+  </li>  
+  <li>Bugfix: Indifferent crashed of Webpage with restart of the clock
+  </li>
+</ul>
+
+**FW_VERSION "6.0.2 dtabh"**
+<ul>
+  <li>Red Colon color during menu input.
+  </li>
+   <li>Bugfix: Toggle with button3 to switch on/off Nightmode with automatic reset of toggle to normal at 6'clock.
+  </li>
+</ul>
 
 **FW_VERSION "6.0.1 dtabh"**
 

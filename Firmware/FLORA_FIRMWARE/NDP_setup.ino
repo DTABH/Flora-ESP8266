@@ -4,8 +4,10 @@ void ndp_setup() {
   TimeChangeRule EST2 = {"EST", json["std_week"].as<int>(), json["std_day"].as<int>(), json["std_month"].as<int>(), json["std_hour"].as<int>(), json["std_offset"].as<int>()};
 
   if (json["dst_enable"].as<int>() == 1) {
+     Serial.println(" dst_enable true std_offset : " + String(json["dst_offset"].as<int>()));
     TZ.setRules(EDT2, EST2);
   } else {
+    Serial.println(" dst_enable false std_offset : " + String(json["std_offset"].as<int>()));
     TZ.setRules(EST2, EST2);
   }
 

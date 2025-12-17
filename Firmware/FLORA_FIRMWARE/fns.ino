@@ -44,3 +44,25 @@ bool saveConfig() {
   configFile.close();
   return true;
 }
+
+bool deleteConfig() {
+  File configFile = SPIFFS.open("/config.json", "r");  
+  if (configFile) {
+    configFile.close();
+    if ( SPIFFS.remove("/config.json"))
+    {
+      Serial.println("OK Config Deleted");
+      return true;
+    }
+    else
+    {
+      Serial.println("Error Config Deleted");
+      return false;
+    }
+  }
+  else
+  {
+    Serial.println("OK Config not exists.");
+  }
+  return true;
+}

@@ -49,7 +49,7 @@
 
 #define AP_NAME "FLORA_"
 #define FW_NAME "FLORA"
-#define FW_VERSION "6.0.2 dtabh"
+#define FW_VERSION "6.0.3 dtabh"
 #define CONFIG_TIMEOUT 300000 // 300000 = 5 minutes
 
 // ONLY CHANGE DEFINES BELOW IF YOU KNOW WHAT YOU'RE DOING!
@@ -212,14 +212,14 @@ volatile uint8_t targetBrightness[registersCount][8];
 // 48 steps => 100hz
 volatile uint8_t shiftedDutyState[registersCount];
 const uint8_t pwmResolution = 48; // should be in the multiples of dimmingSteps to enable smooth crossfade
-const uint8_t dimmingSteps = 1;
+const uint8_t dimmingSteps = 2;
 
 // MAX BRIGHTNESS PER DIGIT
 // These need to be multiples of 8 to enable crossfade! Must be less or equal as pwmResolution.
 // Set maximum brightness for reach digit separately. This can be used to normalize brightness between new and burned out tubes.
 // Last two values are ignored in 4-digit clock
 uint8_t bri_vals_separate[3][6] = {
-  {1, 1, 1, 1, 1, 1}, // Low brightness
+  {2, 2, 2, 2, 2, 2}, // Low brightness
   {16, 16, 16, 16, 16, 16}, // Medium brightness
   {48, 48, 48, 48, 48, 48}, // High brightness
 };
@@ -278,6 +278,7 @@ DateTime RTC_now;
 RTC_DS3231 rtc;
 int showdate;
 int nmode;
+int nmodeoff;
 int togglenmode;
 
 // the setup function runs once when you press reset or power the board
@@ -430,10 +431,10 @@ void setup()
     { 
       
       startServer();
-      Serial.print("OK startServer");
+      Serial.println("OK startServer");
 
       ndp_setup();
-      Serial.print("OK ndp_setup and/or RTC");
+      Serial.println("OK ndp_setup and/or RTC");
     }
   }
 
@@ -452,10 +453,11 @@ void setup()
   }
 
   showdate = json["showdate"].as<unsigned int>() ;
-  Serial.print("OK showdate" + String(showdate));
+  Serial.println("OK showdate: " + String(showdate));
 
   nmode = json["nmode"].as<int>();
-  Serial.print("OK nmode" + String(nmode));
+	nmodeoff = json["nmodeoff"].as<int>();
+  Serial.println("OK nmode: " + String(nmode) + "  nmodeoff: " + String(nmode));
 
   pinMode(BUTTON_1, INPUT);
   pinMode(BUTTON_2, INPUT);
@@ -470,7 +472,7 @@ void setup()
     }
   */
 
-  Serial.print("OK End of Setup " );
+  Serial.println("OK End of Setup " );
 } // End of Setup 
 
 // the loop function runs over and over again forever

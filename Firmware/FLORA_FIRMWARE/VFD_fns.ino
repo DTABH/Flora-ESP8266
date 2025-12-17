@@ -134,7 +134,7 @@ void disableScreen() {
 void setupBriBalance() {
   if (json["bal_enable"].as<int>() == 0) return;
   for (int i = 0; i < registersCount; i++) {
-    bri_vals_separate[0][i] = json["bal"]["low"][i].as<int>(); // low bri balance
+    bri_vals_separate[0][i] = json["bal"]["low"][i].as<int>() -1; // low bri balance Steps are2 Values are 2 so -1 get 1,3,5 ...lowest value possible
     bri_vals_separate[1][i] = json["bal"]["medium"][i].as<int>(); // medium brightness is ignored and set to high
     bri_vals_separate[2][i] = json["bal"]["high"][i].as<int>(); // high bri balance
   }
@@ -375,18 +375,19 @@ void toggleNightMode() {
   // if togglenmode then activate NightMode
   // but at 6 o'clock deactivate the toggle
   int nmode = json["nmode"].as<int>(); 
+	int nmodeoff = json["nmodeoff"].as<int>(); 
   if (togglenmode > 0)
   { 
     bri = 0;
     colon = 0;
-    if( hour() == 6 && minute() == 0 )
+    if( hour() == (nmodeoff + 5) && minute() == 0 )
     {
       togglenmode = 0;
     }
     return;
   }
 
-  if (nmode > 0 && (hour() >= nmode + 18 || hour() <= 6)) {
+  if (nmode > 0 && (hour() >= (nmode + 18)|| hour() <= (nmodeoff + 5))) {
     bri = 0;
     colon = 0;
   } else {

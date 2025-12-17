@@ -205,6 +205,11 @@ void startConfigPortal() {
       WiFi.softAPdisconnect(true);
       //WiFi.mode(WIFI_STA);
       deviceMode = CONNECTION_FAIL;
+      if (RTC_Exists)
+      {
+        RTC_Only = 1;
+      }
+
       return;
     }
 
@@ -409,11 +414,15 @@ void handleRoot() {
     } else if(server.hasArg("is_form")){
       json["rgb"]["en"] = 0;
     }    
+
     if (server.hasArg("showdate")) {
       json["showdate"] = server.arg("showdate");
     }
     if (server.hasArg("nmode")) {
       json["nmode"] = server.arg("nmode");
+    }
+    if (server.hasArg("nmodeoff")) {
+      json["nmodeoff"] = server.arg("nmodeoff");
     }
     if (server.hasArg("cathode")) {
       json["cathode"] = server.arg("cathode");
@@ -482,7 +491,7 @@ void handleRoot() {
 
   }
 
-
+  Serial.println("Ok End server.hasArg('.....')");
 
   String html = "";
 
@@ -591,10 +600,10 @@ void handleRoot() {
     html += "<div class=\"row\"><label for=\"bri\">Brightness:</label>";
     html += "<select id=\"bri\" name=\"bri\">";
     html += "<option value=\"2\"";
-    if (json["bri"].as<int>() == 2) html += " selected";
+    if (!json["bri"].isNull() && json["bri"].as<int>() == 2) html += " selected";
     html += ">High</option>";
     html += "<option value=\"1\"";
-    if (json["bri"].as<int>() == 1) html += " selected";
+    if (!json["bri"].isNull() && json["bri"].as<int>() == 1) html += " selected";
     html += ">Medium</option>";
     html += "<option value=\"0\"";
     if (!json["bri"].isNull() && json["bri"].as<int>() == 0) html += " selected";
@@ -641,7 +650,7 @@ void handleRoot() {
 
       for (int ii = pwmResolution; ii > 0; ii -= dimmingSteps) {
         html += "<option value=\"" + String(ii) + "\"";
-        if ((!json["bal"]["medium"][i].isNull() && json["bal"]["medium"][i].as<int>() == ii) || (json["bal"]["medium"][i].isNull() && ii == dimmingSteps)) html += " selected";
+        if ((!json["bal"]["medium"][i].isNull() && json["bal"]["medium"][i].as<int>() == ii) || (json["bal"]["low"][i].isNull() && ii == dimmingSteps)) html += " selected";
         html += ">" + String(ii) + "</option>";
       }
 
@@ -701,31 +710,45 @@ void handleRoot() {
     html += ">Disable</option>";
     html += "</select></div>";
 
-    html += "<div class=\"row\"><label for=\"nmode\">Night mode:</label>";
+    html += "<div class=\"row\"><label for=\"nmode\">Night mode start hour:</label>";
     html += "<select id=\"nmode\" name=\"nmode\">";
     unsigned int nmode = json["nmode"].as<unsigned int>();
-
     html += "<option value=\"0\"";
     if (nmode == 0) html += " selected";
     html += ">None</option>";
-
     html += "<option value=\"1\"";
     if (nmode == 1) html += " selected";
-    html += ">Set low brightness between 19:00-06:00</option>";
-
+    html += ">Set low brightness at 19:00</option>";
 		html += "<option value=\"2\"";
     if (nmode == 2) html += " selected";
-    html += ">Set low brightness between 20:00-06:00</option>";
-
+    html += ">Set low brightness at 20:00</option>";
 		html += "<option value=\"3\"";
     if (nmode == 3) html += " selected";
-    html += ">Set low brightness between 21:00-06:00</option>";
-
+    html += ">Set low brightness at 21:00</option>";
 		html += "<option value=\"4\"";
     if (nmode == 4) html += " selected";
-    html += ">Set low brightness between 22:00-06:00</option>";	
-
+    html += ">Set low brightness at 22:00</option>";	
     html += "</select></div>";
+
+		html += "<div class=\"row\"><label for=\"nmodeoff\">Night mode end hour:</label>";
+    html += "<select id=\"nmodeoff\" name=\"nmodeoff\">";
+    unsigned int nmodeoff = json["nmodeoff"].as<unsigned int>();
+    html += "<option value=\"5\"";
+    if (nmodeoff == 5) html += " selected";
+    html += ">End low brightness at 5:00</option>";
+    html += "<option value=\"6\"";
+    if (nmodeoff == 6) html += " selected";
+    html += ">End low brightness at 6:00</option>";
+		html += "<option value=\"7\"";
+    if (nmodeoff == 7) html += " selected";
+    html += ">End low brightness at 7:00</option>";
+		html += "<option value=\"8\"";
+    if (nmodeoff == 8) html += " selected";
+    html += ">End low brightness at 8:00</option>";
+		html += "<option value=\"9\"";
+    if (nmodeoff == 9) html += " selected";
+    html += ">End low brightness at 9:00</option>";	
+    html += "</select></div>";		
 
     html += "<div class=\"row\"><label for=\"colon\">Colon:</label>";
     html += "<select id=\"colon\" name=\"colon\">";
@@ -794,7 +817,7 @@ void handleRoot() {
     html += "<p>Set your timezone and optionally also daylight saving.</p>";
 
 
-    html += "<div class=\"row\"><label for=\"std_offset\">Standard (winter) time UTC offset (in minutes, -660 = -11h, 660 = +11h):</label>";
+    html += "<div class=\"row\"><label for=\"std_offset\">Standard (winter) time UTC offset (!IN MINUTES!, -660 = -11h, 660 = +11h):</label>";
     html += "<input type=\"number\" id=\"std_offset\" name=\"std_offset\" min=\"-660\" max=\"660\" value=\"";
     html += json["std_offset"].as<const char*>();
     html += "\"></div>";
@@ -1029,7 +1052,7 @@ void handleRoot() {
 
     html += "</div>"; // FLEX ROW END
 
-    html += "<div class=\"row\"><label for=\"dst_offset\">Daylight saving (summer) time UTC offset (in minutes):</label>";
+    html += "<div class=\"row\"><label for=\"dst_offset\">Daylight saving (summer) time UTC offset (!IN MINUTES!):</label>";
     html += "<input type=\"number\" id=\"dst_offset\" name=\"dst_offset\" min=\"-660\" max=\"660\" value=\"";
     html += json["dst_offset"].as<const char*>();
     html += "\"></div>";
@@ -1073,6 +1096,7 @@ void handleRoot() {
   Serial.println(" ms");
 
   if (server.args() && server.hasArg("is_form")) {
+    Serial.println("Ok ESP.restart(); ");
     delay(1000);
     ESP.restart();
     delay(100);

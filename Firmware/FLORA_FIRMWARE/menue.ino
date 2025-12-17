@@ -23,6 +23,14 @@ void menue(int buttonpressed)
 
   bool OldRTC_Only = RTC_Only;
 
+  // Button 1 and 2 and3 clear save values restart and open webpage
+  if (buttonpressed == 7)
+  {
+    deleteConfig();
+    delay(1000);
+    ESP.restart();
+  }
+
   // Button 1 and 2 pressed together RTC_Only set to true
   if (buttonpressed == 3)
   { 

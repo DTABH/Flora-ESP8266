@@ -42,6 +42,7 @@
     I don't know how to deactivate this compiler behaviour in Arduino, so i deleted  [[maybe_unused]] in the hole library and the code could be compiled.    
   </li>  
 </ul>
+
 # Changes:
 
 **FW_VERSION "6.1.0 dtabh"**

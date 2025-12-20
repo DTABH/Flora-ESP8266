@@ -49,7 +49,7 @@
 
 #define AP_NAME "FLORA_"
 #define FW_NAME "FLORA"
-#define FW_VERSION "6.0.3 dtabh"
+#define FW_VERSION "6.1.0 dtabh"
 #define CONFIG_TIMEOUT 300000 // 300000 = 5 minutes
 
 // ONLY CHANGE DEFINES BELOW IF YOU KNOW WHAT YOU'RE DOING!
@@ -482,6 +482,7 @@ void loop()
   //Serial.println("Begin of loop " + String(millis()));
   if (timeUpdateFirst == true && timeUpdateStatus == UPDATE_FAIL || deviceMode == CONNECTION_FAIL) 
   {
+    Serial.println(" timeUpdateFirst: " + String(timeUpdateFirst) + "  or connection failed" );
     setAllDigitsTo(0);
     updateColonColor(red[bri]); // red
     strip_show();
@@ -550,13 +551,13 @@ void loop()
   server.handleClient();
   delay(10); // Keeps the ESP cold!
 
-  // Button handling
+  // Button handling only when RTC exists
   int timeButtonpressed = 0;
   int buttonpressed1 = 0;
   int buttonpressed2 = 0;
   int buttonpressed3 = 0;
   // When a button is pressed more than 2 seconds go to menue
-  while ((digitalRead(BUTTON_1)  || analogRead(BUTTON_2)> 100 || digitalRead(BUTTON_3)) && timeButtonpressed <= 20)
+  while (RTC_Exists && (digitalRead(BUTTON_1)  || analogRead(BUTTON_2)> 100 || digitalRead(BUTTON_3)) && timeButtonpressed <= 20)
   {
     timeButtonpressed += 1;
     if(digitalRead(BUTTON_1)){buttonpressed1=1;}

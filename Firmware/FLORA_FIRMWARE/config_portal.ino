@@ -169,7 +169,7 @@ bool startMDNS() {
 }
 
 void startConfigPortal() {
-  Serial.print("Start startConfigPortal ");
+  Serial.println("Start startConfigPortal ");
   configStartMillis = millis(); // start counter
 
   updateColonColor(purple[bri]);

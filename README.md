@@ -1,4 +1,58 @@
+# Conclusion  Hints to major problems building the watch and software:
+*Conclusion*
+<ul> Thanks to  mcer12 and his Flora-ESP8266, i build now 2 of these clocks. <br>
+  Due to failure of internet and reboot of the clock, the clock don't works 
+  and i decided to implement an RTC-Module <br>
+  It was partially a good experience even i had some problems with hard and software. <br>
+  Perhaps i will build my first own pcb with some changes:  <br>
+  <li> Using an external potentiometer or a switch for different voltages so i could dimm very low.     
+  </li>
+  <li> RTC and buttons if possible on the backside of the pcb
+  </li>  
+  <li> An easy soldering of the USB port 
+  </li>  
+</ul>
+
+*Hardware*
+<ul>
+   <li> Having bad or wrong MT3608, took me .. 6.. hours and 6 bad MT3608 i killed  <br>
+     and 3 MT3608 which can't get higher then 18 Volt even it was specified on the package! <br>
+     (The MT3608L (L for low?) is specified only up to 20.)
+  </li>
+  <li> Wrong placment of Resistors R3 an R4 leads to impossible programm upload took me 2 -3 days to find out.  <br>
+    Desoldered CH340 and ESP2M and replaced with new... no idea why it doesn't work <br>
+    replaced transistors, capacitors, tried to find out something with the ozsi  <br>
+    Many wrong approaches .... then suddenlyi saw the Bullshit i made ....
+  </li>  
+  <li> One segment always on with brightness high due to bad 74HC595D. <br>
+    Changing the 74HC595D and it works.
+  </li>
+  <li> Soldering the USB-Port is absolutly bullshit. Absolutly.  Don't do it.
+  </li>
+</ul>
+
+*Software*
+<ul>
+   <li> Having done everything what to do the program crashes after successful build and upload.
+     Took me several hours and many Serial.println(.. to get closer to the problem. <br>
+     It was: ICACHE_RAM_ATTR was no longer supported and simply ignored. Bullshit <br>
+     So i replaced it as suggested with IRAM_ATTR. also in SPI.h !!! and the program works.     
+  </li>
+  <li>  [[maybe_unused]] in the library of NeoPixelBus_by_Makuna leads to compiler errors.  <br>
+    I don't know how to deactivate this compiler behaviour in Arduino, so i replaced  [[maybe_unused]] in the hole library and the code could be compiled.    
+  </li>  
+</ul>
 # Changes:
+
+**FW_VERSION "6.1.0 dtabh"**
+
+<ul>
+   <li> Final version
+  </li>
+  <li> Bugfix : Without RTC program hangs and wdt will continously reset the esp.    
+  </li>  
+</ul>
+
 **FW_VERSION "6.0.3 dtabh"**
 
 <ul>

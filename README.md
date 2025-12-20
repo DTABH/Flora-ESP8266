@@ -19,10 +19,10 @@
      and 3 MT3608 which can't get higher then 18 Volt even it was specified on the package! <br>
      (The MT3608L (L for low?) is specified only up to 20.)
   </li>
-  <li> Wrong placment of Resistors R3 an R4 leads to impossible programm upload took me 2 -3 days to find out.  <br>
+  <li> Wrong placement of Resistors R3 an R4 leads to impossible programm upload took me 2 -3 days to find out.  <br>
     Desoldered CH340 and ESP2M and replaced with new... no idea why it doesn't work <br>
     replaced transistors, capacitors, tried to find out something with the ozsi  <br>
-    Many wrong approaches .... then suddenlyi saw the Bullshit i made ....
+    Many wrong approaches .... then suddenly i saw the Bullshit i made ....
   </li>  
   <li> One segment always on with brightness high due to bad 74HC595D. <br>
     Changing the 74HC595D and it works.
@@ -33,13 +33,13 @@
 
 *Software*
 <ul>
-   <li> Having done everything what to do the program crashes after successful build and upload.
+   <li> Having done everything what to do, the program crashes after successful build and upload.
      Took me several hours and many Serial.println(.. to get closer to the problem. <br>
      It was: ICACHE_RAM_ATTR was no longer supported and simply ignored. Bullshit <br>
      So i replaced it as suggested with IRAM_ATTR. also in SPI.h !!! and the program works.     
   </li>
   <li>  [[maybe_unused]] in the library of NeoPixelBus_by_Makuna leads to compiler errors.  <br>
-    I don't know how to deactivate this compiler behaviour in Arduino, so i replaced  [[maybe_unused]] in the hole library and the code could be compiled.    
+    I don't know how to deactivate this compiler behaviour in Arduino, so i deleted  [[maybe_unused]] in the hole library and the code could be compiled.    
   </li>  
 </ul>
 # Changes:

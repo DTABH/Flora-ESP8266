@@ -147,7 +147,9 @@ After flashing the browser cache everythings ok.
 ![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1234.jpg)  
 ![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1235.jpg)  
 ![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1236.jpg)  
-
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1256.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1258.jpg)  
+![alt text](https://raw.githubusercontent.com/dtabh/Flora-ESP8266/main/Images/IMG_1259.jpg)  
 <br>
 <br>
 <br>

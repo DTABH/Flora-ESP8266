@@ -1,11 +1,12 @@
 
 
 // Menu starting with long pressed button
-// 1 -> Setting minute,hour,year,month,day
+// 1 -> Setting minute,hour,year,month,day  Buttons 1->next setting, 2-> +1 and 3-> -1
+// 2 ->Setting Show Date "5O", nightmode On "O8", nightmode Off "O1"  Buttons 2->next setting, 1-> +1 and 3-> -1
+// 3 -> toggle for nightmode
 // 1,2 together  Set RTC_Only true -> no WLAN no webpage no ntp
 // 1,3 together  Set RTC_Only false-> access via WLAN  webpage and if configured ntp
-// 2 -> Show Date
-// 3 -> toggle for nightmode
+// 1,2,3 together  Delete configuration and restart opening Accesspoint at 192.168.254.1 with Webpage 
 void menue(int buttonpressed)
 {
 
@@ -174,8 +175,8 @@ void menue(int buttonpressed)
    // show date , 
   if (buttonpressed == 2)
   {    
-    // 1= show date, 2 =  night mode
-    for (int i = 1; i < 2; i ++) 
+    // 1 = show date, 2 = night mode , 3 = night mode off
+    for (int i = 1; i < 4; i ++) 
     {      
 
       Serial.println("menue item : " + String(i));
@@ -183,43 +184,37 @@ void menue(int buttonpressed)
       setSyncInterval(0.1);
       delay(200);
       // Show the right menu
-      if(i == 1)
-      {
-        // 5 = "S"  0 = "D" for "S"how"D"ate
-        showDigits(5,0,-1, showdate);
-      }      
+      // 5 = "S"  0 = "D" for "S"how"D"ate
+      if(i == 1){showDigits(5,0,-1, showdate);}   
+      // 0 = "O"  8 = "N"   ON 
+      if(i == 2){showDigits(0,8,-1, nmode);}
+      // 0 = "O"  1 = "F"   OFF       
+      if(i == 3){showDigits(0,1,-1, nmodeoff);}      
       setSyncInterval(3600);
 
       // Loop over button pressings
       endreached = 0;
       while (endreached < 30)
       { 
-        if (analogRead(BUTTON_2) > 100)
+        if (digitalRead(BUTTON_3))
         {
-          if(i == 1)
-          {
-            if (showdate < 2)
-            {
-              showdate++;
-            }
-          }
+          if(i == 1){ if (showdate < 2) { showdate++; }}
+          if(i == 2){ if (nmode < 5) { nmode++; }}
+          if(i == 3){ if (nmodeoff < 2) { nmodeoff++; }}
           endreached =0;
         }
 
-        if (digitalRead(BUTTON_3) )
+        if (digitalRead(BUTTON_1) )
         {
-          if(i == 1)
-          {
-            if (showdate > 0)
-              {
-                showdate--;
-              }
-          }
+          if(i == 1){ if (showdate > 0) {showdate--;}}
+          if(i == 2){ if (nmode > 0) {nmode--;}}
+          if(i == 3){ if (nmodeoff > 0) {nmodeoff--;}}
           endreached =0;
         } 
 
-        if (digitalRead(BUTTON_1) )
+        if (analogRead(BUTTON_2) > 100 )
         { 
+          // next setting
           delay(500);
           break;
         } 
@@ -227,11 +222,14 @@ void menue(int buttonpressed)
         setSyncInterval(0.1);
         delay(200);
         endreached +=1;    
-        // show changes in the right menu
-        if(i == 1)
-        {
-          showDigits(5,0,-1, showdate);
-        }      
+        // Show the right menu
+        // 5 = "S"  0 = "D" for "S"how"D"ate
+        if(i == 1){showDigits(5,0,-1, showdate);}   
+        // 0 = "O"  8 = "N"   ON 
+        if(i == 2){showDigits(0,8,-1, nmode);}
+        // 0 = "O"  1 = "F"   OFF       
+        if(i == 3){showDigits(0,1,-1, nmodeoff);}   
+
 
         setSyncInterval(3600);
       }

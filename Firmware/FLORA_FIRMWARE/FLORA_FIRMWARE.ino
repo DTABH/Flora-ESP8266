@@ -6,7 +6,7 @@
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
 //  Use ESP8266 Boardmanager Version 2.7.4 other might fail
 // Use Generic ESP8285 Modul ESP8285 with  Tools:Flashsize 1 MB FS:64K OTA 470K  other might fail
-// Use the Lib-files of SPI within this projetc an copy to the folder of arduino libraries
+// Use the Lib-files of SPI within this project an copy to the folder of the current arduino libraries
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
 
 
@@ -42,14 +42,15 @@
 //#define CLOCK_VERSION_IV6_V2
 //#define CLOCK_VERSION_IV12
 #define CLOCK_VERSION_IV22
+//#define CLOCK_VERSION_IV11_RV  // Digits are in reverse order. 
 
-#if !defined(CLOCK_VERSION_IV6) && !defined(CLOCK_VERSION_IV6_V2) && !defined(CLOCK_VERSION_IV12) && !defined(CLOCK_VERSION_IV22)
+#if !defined(CLOCK_VERSION_IV6) && !defined(CLOCK_VERSION_IV6_V2) && !defined(CLOCK_VERSION_IV12) && !defined(CLOCK_VERSION_IV22) && !defined(CLOCK_VERSION_IV11_RV)
 #error "You have to select a clock version! Line 25"
 #endif
 
 #define AP_NAME "FLORA_"
 #define FW_NAME "FLORA"
-#define FW_VERSION "6.1.0 dtabh"
+#define FW_VERSION "6.1.1 dtabh"
 #define CONFIG_TIMEOUT 300000 // 300000 = 5 minutes
 
 // ONLY CHANGE DEFINES BELOW IF YOU KNOW WHAT YOU'RE DOING!
@@ -188,6 +189,15 @@ const uint8_t digitPins[registersCount][segmentCount] = {
   {14, 9, 10, 8, 13, 11, 12, 15}, // BR | B | BL | TL | M | T | TR | DOT
   {2, 0, 7, 6, 3, 5, 4, 1}, // BR | B | BL | TL | M | T | TR | DOT
 };
+#elif defined(CLOCK_VERSION_IV11_RV)
+const uint8_t registersCount = 4;
+const uint8_t segmentCount = 8;
+const uint8_t digitPins[registersCount][segmentCount] = {
+  {29, 28, 27, 26, 24, 31, 25, 30}, // BR | B | BL | TL | M | T | TR | DOT
+  {17, 18, 19, 20, 16, 23, 21, 22}, // BR | B | BL | TL | M | T | TR | DOT
+  {11, 12, 13, 14, 9, 10, 15, 8}, // BR | B | BL | TL | M | T | TR | DOT
+  {5, 4, 3, 2, 0, 7, 1, 6}, // BR | B | BL | TL | M | T | TR | DOT   {3,4,5,1,0,7,2,6}
+};
 #endif
 
 uint8_t letter_p[8] = {0, 0, 1, 1, 1, 1, 1, 0};
@@ -211,7 +221,7 @@ volatile uint8_t targetBrightness[registersCount][8];
 // 32 steps of brightness * 200uS => 6.4ms for full refresh => 160Hz... pretty good!
 // 48 steps => 100hz
 volatile uint8_t shiftedDutyState[registersCount];
-const uint8_t pwmResolution = 48; // should be in the multiples of dimmingSteps to enable smooth crossfade
+const uint8_t pwmResolution = 60; // should be in the multiples of dimmingSteps to enable smooth crossfade
 const uint8_t dimmingSteps = 2;
 
 // MAX BRIGHTNESS PER DIGIT
@@ -291,7 +301,7 @@ void setup()
   Serial.println("Start Setup");
   
   // Begin I2C communication
-  // per default GPIO 4,5 so  Wire.begin(); would be enough for better reading used:
+  // per default GPIO 4,5 so  Wire.begin(); would be enough for better reading used
   Wire.begin(I2C_SDA,I2C_SCL); 
   if ( rtc.begin()) 
   {
@@ -541,7 +551,7 @@ void loop()
       showTime();
     }
     
-    Serial.println("Time Update millis: " + String(prevDisplayMillis) + "  now: " + String(now()));
+    Serial.println("Time Update millis: " + String(prevDisplayMillis) + "  now: " + String(now()) + " RTC_Exists: " + String(RTC_Exists) + " RTC_Only:" + String(RTC_Only));
   }
 
   animations.UpdateAnimations();
@@ -556,8 +566,9 @@ void loop()
   int buttonpressed1 = 0;
   int buttonpressed2 = 0;
   int buttonpressed3 = 0;
-  // When a button is pressed more than 2 seconds go to menue
-  while (RTC_Exists && (digitalRead(BUTTON_1)  || analogRead(BUTTON_2)> 100 || digitalRead(BUTTON_3)) && timeButtonpressed <= 20)
+  // When a button is pressed more than 2 seconds go to menue RTC_Exists &&
+
+  while ((digitalRead(BUTTON_1)  || analogRead(BUTTON_2)> 100 || digitalRead(BUTTON_3)) && timeButtonpressed <= 20)
   {
     timeButtonpressed += 1;
     if(digitalRead(BUTTON_1)){buttonpressed1=1;}

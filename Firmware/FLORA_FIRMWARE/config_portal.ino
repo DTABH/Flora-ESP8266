@@ -216,7 +216,7 @@ void startConfigPortal() {
     if (millis() - lastTest > 100) {
       int splitTime[] = {
 
-#ifndef CLOCK_VERSION_IV22
+#ifndef CLOCK_VERSION_IV22 || CLOCK_VERSION_IV11_RV 
         (hour(remainingSeconds) / 10) % 10,
         hour(remainingSeconds) % 10,
 #endif
@@ -227,7 +227,7 @@ void startConfigPortal() {
       };
 
       for (int i = 0; i < registersCount; i++) {
-#ifndef CLOCK_VERSION_IV22
+#ifndef CLOCK_VERSION_IV22 || CLOCK_VERSION_IV11_RV 
         if (i < 4 && splitTime[i] == 0 && registersCount > 4) {
           blankDigit(i);
           continue;
@@ -761,7 +761,7 @@ void handleRoot() {
     html += "<option value=\"1\"";
     if (json["colon"].as<int>() == 1) html += " selected";
     html += ">Always ON</option>";
-#if !defined(CLOCK_VERSION_IV22)
+#if !defined(CLOCK_VERSION_IV22) && !defined(CLOCK_VERSION_IV11_RV) 
     // gradient doesn't make sense on IV-22 colon
     html += "<option value=\"3\"";
     if (json["colon"].as<int>() == 3) html += " selected";

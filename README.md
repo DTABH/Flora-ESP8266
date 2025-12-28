@@ -1,6 +1,6 @@
 # Conclusion  Hints to major problems building the watch and software:
 *Conclusion*
-<ul> Thanks to  mcer12 and his Flora-ESP8266, i build now 2 of these clocks. <br>
+<ul> Thanks to  mcer12 and his Flora-ESP8266, i build now 3 of these clocks. <br>
   Due to failure of internet and reboot of the clock, the clock don't works 
   and i decided to implement an RTC-Module <br>
   It was partially a good experience even i had some problems with hard and software. <br>
@@ -45,11 +45,33 @@
 
 # Changes:
 
+**FW_VERSION "6.1.1 dtabh"**
+
+<ul>
+   <li> 
+     Added IV11 tubes. (see images) <br>
+     IV11 tubes can be soldered direct on the board for IV22 tubes. Only one Pin must be bend and soldered across the other pins.
+     and a bridge must be placed between the former unused pin 9 and pin 1 which is now "unused" but connected via pin 9 to the tube.
+     Due to the position of the tubes the time would be shown reversed. So i had to implement a reverse mode drawing the digits.     
+  </li>
+  <li> 
+    Add Nightmode/NightmodeOff to button menue     
+  </li>  
+  <li> The actual button menue  <br>
+      Menu starting with long pressed button <br>
+      1 -> Setting minute,hour,year,month,day  Buttons 1->next setting, 2-> +1 and 3-> -1 <br>
+      2 ->Setting Show Date "5O", nightmode On "O8", nightmode Off "O1"  Buttons 2->next setting, 1-> +1 and 3-> -1 <br>
+      3 -> toggle for nightmode <br>
+      1,2 together  Set RTC_Only true -> no WLAN no webpage no ntp <br>
+      1,3 together  Set RTC_Only false-> access via WLAN  webpage and if configured ntp <br>
+      1,2,3 together  Delete configuration and restart opening Accesspoint  <br>    
+  </li>
+
+</ul>
+
 **FW_VERSION "6.1.0 dtabh"**
 
 <ul>
-   <li> Final version
-  </li>
   <li> Bugfix : Without RTC program hangs and wdt will continously reset the esp.    
   </li>  
 </ul>
